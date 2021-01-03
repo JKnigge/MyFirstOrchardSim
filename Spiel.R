@@ -1,9 +1,9 @@
-multSpiele <- function(anzahl, rabeWin=6, showText=FALSE, returnDataFrame=TRUE) {
+multSpiele <- function(anzahl, rabeWin=6, rational=TRUE, showText=FALSE, returnDataFrame=TRUE) {
   ergebnis <- NULL
   numTrue <- 0
   numFalse <- 0
   for(i in 1:anzahl) {
-    erg <- obstgartenSpiel(rabeWin, showText)
+    erg <- obstgartenSpiel(rabeWin=rabeWin, rational=rational, showText=showText)
     ergebnis <- c(ergebnis, erg)
     if(erg) {
       numTrue <- numTrue +1
@@ -18,10 +18,11 @@ multSpiele <- function(anzahl, rabeWin=6, showText=FALSE, returnDataFrame=TRUE) 
   }
 }
 
-obstgartenSpiel <- function(rabeWin=5, showText=FALSE) {
+obstgartenSpiel <- function(rabeWin=5, rational=TRUE, showText=FALSE) {
   fruechte <<- c(4,4,4,4)
   rabe <<- 0
   rabeWin <<- rabeWin
+  favoriten <<- c(1,2,3,4)
   
   ende <- FALSE
   if(showText) {
@@ -29,13 +30,13 @@ obstgartenSpiel <- function(rabeWin=5, showText=FALSE) {
   }
   
   while(!ende) {
-    fruechte=spielrunde(fruechte,showText=showText)
+    fruechte=spielrunde(fruechte, rational=rational, showText=showText)
     ende <- spielende(fruechte, showText=showText)
   }
   return(gewonnen(fruechte, showText=showText))
 }
 
-spielrunde <- function(fruechte, showText=FALSE) {
+spielrunde <- function(fruechte, rational=TRUE, showText=FALSE) {
   wurf <- sample(1:6, 1)
   if(showText) {
     cat(paste("Es wurde eine",wurf,"gewürfelt!\n", sep=" "))
@@ -46,7 +47,7 @@ spielrunde <- function(fruechte, showText=FALSE) {
       cat(paste("Der Rabe bewegt sich und ist nun auf Position ", rabe,"!\n", sep=""))
     }
   } else if(wurf==5) {
-    fruechte=obstkorb(fruechte, showText=showText)
+    fruechte=obstkorb(fruechte, rational=rational, showText=showText)
   } else {
     fruechte=fruchtNehmen(fruechte, wurf, showText=showText)
   }
@@ -67,18 +68,29 @@ fruchtNehmen <- function(fruechte, num, showText=FALSE) {
   return(fruechte)
 }
 
-obstkorb <- function(fruechte, showText=FALSE) {
-  index <- indexOfMax()
-  if(index>1) {
-    index1 <- sample(index, 1)
-    
+obstkorb <- function(fruechte, rational=TRUE, showText=FALSE) {
+  if(rational) {
+    index <- indexOfMax(fruechte)
+    #cat(paste("IndexOfMax=", index,sep=""))
+    if(length(index)>1) {
+      index1 <- sample(index, 1)
+      #cat(paste("Zufällige Frucht wurde gewählt:",index1,sep=""))
+    } else {
+      index1 <- index
+    }
   } else {
-    index1 <- index
+    check <- 0
+    index <- 1
+    while(check==0) {
+      index1 <- favoriten[index]
+      check <- fruechte[index1]
+      index <- index+1
+    }
   }
   return(fruchtNehmen(fruechte, index1, showText=showText))
 }
 
-indexOfMax <- function() {
+indexOfMax <- function(fruechte) {
   maximum <- max(fruechte)
   index <- NULL
   for(i in 1:length(fruechte)) {
